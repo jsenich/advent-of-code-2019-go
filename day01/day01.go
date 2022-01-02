@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-//go:embed data/day01_input.txt
-var data embed.FS
+//go:embed *.txt
+var fs embed.FS
 
 func calculate_fuel_requirement(mass int, include_additional_fuel bool) int {
 	var requirement float64
@@ -56,7 +56,7 @@ func part_two(data string) int {
 }
 
 func main() {
-	puzzleInput, _ := data.ReadFile("data/day01_input.txt")
+	puzzleInput, _ := fs.ReadFile("day01_input.txt")
 
 	fmt.Printf("Part One: %d\n", part_one(string(puzzleInput))) // 3349352
 	fmt.Printf("Part Two: %d\n", part_two(string(puzzleInput))) // 5021154
