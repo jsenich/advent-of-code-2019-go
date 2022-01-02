@@ -12,12 +12,33 @@ import (
 //go:embed data/day01_input.txt
 var data embed.FS
 
+func calculate_fuel_requirement(mass int, include_additional_fuel bool) int {
+	var requirement float64
+
+	if !include_additional_fuel {
+		requirement = math.Floor(float64(mass)/3) - 2
+	} else {
+		var totalRequirement float64
+		for {
+			requirement = math.Floor(float64(mass)/3) - 2
+			if requirement <= 0 {
+				break
+			}
+			totalRequirement += requirement
+			mass = int(requirement)
+		}
+		requirement = totalRequirement
+	}
+
+	return int(requirement)
+}
+
 func part_one(data string) int {
 	var fuelTotal int
 	scanner := bufio.NewScanner(strings.NewReader(data))
 	for scanner.Scan() {
 		mass, _ := strconv.Atoi(scanner.Text())
-		requirement := math.Floor(float64(mass)/3) - 2
+		requirement := calculate_fuel_requirement(mass, false)
 		fuelTotal += int(requirement)
 	}
 	return fuelTotal
@@ -28,15 +49,8 @@ func part_two(data string) int {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 	for scanner.Scan() {
 		mass, _ := strconv.Atoi(scanner.Text())
-		var requirement float64
-		for mass > 0 {
-			requirement = math.Floor(float64(mass)/3) - 2
-			if requirement > 0 {
-				fuelTotal += int(requirement)
-			}
-			mass = int(requirement)
-		}
-		// fuelTotal += int(requirement)
+		requirement := calculate_fuel_requirement(mass, true)
+		fuelTotal += int(requirement)
 	}
 	return fuelTotal
 }
@@ -44,13 +58,6 @@ func part_two(data string) int {
 func main() {
 	puzzleInput, _ := data.ReadFile("data/day01_input.txt")
 
-	// var fuelTotal int
-	// scanner := bufio.NewScanner(file)
-	// for scanner.Scan() {
-	// 	mass, _ := strconv.Atoi(scanner.Text())
-	// 	requirement := math.Floor(float64(mass)/3) - 2
-	// 	fuelTotal += int(requirement)
-	// }
-	// fmt.Printf("Part One: %d", part_one(string(puzzleInput)))
-	fmt.Printf("Part Two: %d", part_two(string(puzzleInput)))
+	fmt.Printf("Part One: %d\n", part_one(string(puzzleInput))) // 3349352
+	fmt.Printf("Part Two: %d\n", part_two(string(puzzleInput))) // 5021154
 }
