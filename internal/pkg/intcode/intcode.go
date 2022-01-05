@@ -11,33 +11,6 @@ type Computer struct {
 	Memory             []int
 }
 
-func (c *Computer) processOpcode() bool {
-	instruction := c.Memory[c.instructionPointer : c.instructionPointer+4]
-	opcode := instruction[0]
-	parameters := instruction[1:4]
-	val1 := c.Memory[parameters[0]]
-	val2 := c.Memory[parameters[1]]
-
-	ret := true
-
-	switch opcode {
-	case 1:
-		c.Memory[parameters[2]] = val1 + val2
-	case 2:
-		c.Memory[parameters[2]] = val1 * val2
-	case 99:
-		ret = false
-	default:
-		panic("unexpected opcode")
-	}
-
-	return ret
-}
-
-func (c *Computer) step() {
-	c.instructionPointer += 4
-}
-
 func (c *Computer) Reset() {
 	c.Memory = make([]int, len(c.initialMemory))
 	copy(c.Memory, c.initialMemory)
@@ -51,11 +24,25 @@ func (c *Computer) ExecuteProgram(noun int, verb int) {
 	}
 
 	for {
-		if !c.processOpcode() {
+		opcode := c.Memory[c.instructionPointer]
+		if opcode == 99 {
 			break
 		}
 
-		c.step()
+		parameters := c.Memory[c.instructionPointer+1 : c.instructionPointer+4]
+		val1 := c.Memory[parameters[0]]
+		val2 := c.Memory[parameters[1]]
+
+		switch opcode {
+		case 1:
+			c.Memory[parameters[2]] = val1 + val2
+		case 2:
+			c.Memory[parameters[2]] = val1 * val2
+		default:
+			panic("unexpected opcode")
+		}
+
+		c.instructionPointer += 4
 	}
 }
 
