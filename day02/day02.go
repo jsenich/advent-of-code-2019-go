@@ -11,23 +11,26 @@ import (
 var fs embed.FS
 
 type Computer struct {
-	program         []int
-	currentPosition int
+	memory             []int
+	noun               int
+	verb               int
+	instructionPointer int
 }
 
 func (c *Computer) processOpcode() bool {
-	op := c.program[c.currentPosition : c.currentPosition+4]
-	opcode := op[0]
-	val1 := c.program[op[1]]
-	val2 := c.program[op[2]]
+	instruction := c.memory[c.instructionPointer : c.instructionPointer+4]
+	opcode := instruction[0]
+	parameters := instruction[1:4]
+	val1 := c.memory[parameters[0]]
+	val2 := c.memory[parameters[1]]
 
 	ret := true
 
 	switch opcode {
 	case 1:
-		c.program[op[3]] = val1 + val2
+		c.memory[parameters[2]] = val1 + val2
 	case 2:
-		c.program[op[3]] = val1 * val2
+		c.memory[parameters[2]] = val1 * val2
 	case 99:
 		ret = false
 	default:
@@ -38,13 +41,13 @@ func (c *Computer) processOpcode() bool {
 }
 
 func (c *Computer) step() {
-	c.currentPosition += 4
+	c.instructionPointer += 4
 }
 
 func (c *Computer) Initialize() {
-	c.currentPosition = 0
-	c.program[1] = 12
-	c.program[2] = 2
+	c.instructionPointer = 0
+	c.memory[1] = c.noun
+	c.memory[2] = c.verb
 }
 
 func (c *Computer) Run() {
@@ -57,26 +60,31 @@ func (c *Computer) Run() {
 	}
 }
 
-func NewComputer(program []byte) Computer {
+func NewComputer(program []byte, noun int, verb int) *Computer {
 	programStrs := strings.Split(string(program), ",")
 	programInts := make([]int, len(programStrs))
 	for i, s := range programStrs {
 		programInts[i], _ = strconv.Atoi(s)
 	}
+	computer := new(Computer)
+	computer.memory = programInts
+	computer.noun = noun
+	computer.verb = verb
+	computer.Initialize()
 
-	return Computer{program: programInts}
+	return computer
 }
 
-func part_one(puzzleInput []byte) int {
-	computer := NewComputer(puzzleInput)
-	computer.Initialize()
+func PartOne(puzzleInput []byte) int {
+	computer := NewComputer(puzzleInput, 12, 2)
+	// computer.Reset()
 	computer.Run()
 
-	return computer.program[0]
+	return computer.memory[0]
 }
 
 func main() {
 	puzzleInput, _ := fs.ReadFile("day02_input.txt")
 
-	fmt.Printf("Part One: %d\n", part_one(puzzleInput))
+	fmt.Printf("Part One: %d\n", PartOne(puzzleInput))
 }
