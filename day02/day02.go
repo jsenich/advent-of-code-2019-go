@@ -11,9 +11,8 @@ import (
 var fs embed.FS
 
 type Computer struct {
+	initialMemory      []int
 	memory             []int
-	noun               int
-	verb               int
 	instructionPointer int
 }
 
@@ -44,13 +43,18 @@ func (c *Computer) step() {
 	c.instructionPointer += 4
 }
 
-func (c *Computer) Initialize() {
+func (c *Computer) Reset() {
+	c.memory = make([]int, len(c.initialMemory))
+	copy(c.memory, c.initialMemory)
 	c.instructionPointer = 0
-	c.memory[1] = c.noun
-	c.memory[2] = c.verb
 }
 
-func (c *Computer) Run() {
+func (c *Computer) ExecuteProgram(noun int, verb int) {
+	if noun != -1 && verb != -1 {
+		c.memory[1] = noun
+		c.memory[2] = verb
+	}
+
 	for {
 		if !c.processOpcode() {
 			break
@@ -60,31 +64,53 @@ func (c *Computer) Run() {
 	}
 }
 
-func NewComputer(program []byte, noun int, verb int) *Computer {
+func NewComputer(program []byte) *Computer {
 	programStrs := strings.Split(string(program), ",")
 	programInts := make([]int, len(programStrs))
+
 	for i, s := range programStrs {
 		programInts[i], _ = strconv.Atoi(s)
 	}
 	computer := new(Computer)
-	computer.memory = programInts
-	computer.noun = noun
-	computer.verb = verb
-	computer.Initialize()
+	computer.initialMemory = programInts
+	computer.Reset()
 
 	return computer
 }
 
 func PartOne(puzzleInput []byte) int {
-	computer := NewComputer(puzzleInput, 12, 2)
-	// computer.Reset()
-	computer.Run()
+	computer := NewComputer(puzzleInput)
+	computer.ExecuteProgram(12, 2)
 
 	return computer.memory[0]
+}
+
+func PartTwo(puzzleInput []byte) int {
+	targetValue := 19690720
+	var result int
+
+	computer := NewComputer(puzzleInput)
+
+out:
+	for noun := 0; noun <= 99; noun++ {
+		for verb := 0; verb <= 99; verb++ {
+			if noun > 0 || verb > 0 {
+				computer.Reset()
+			}
+			computer.ExecuteProgram(noun, verb)
+			if computer.memory[0] == targetValue {
+				result = 100*noun + verb
+				break out
+			}
+		}
+	}
+
+	return result
 }
 
 func main() {
 	puzzleInput, _ := fs.ReadFile("day02_input.txt")
 
-	fmt.Printf("Part One: %d\n", PartOne(puzzleInput))
+	fmt.Printf("Part One: %d\n", PartOne(puzzleInput)) // 9706670
+	fmt.Printf("Part Two: %d\n", PartTwo(puzzleInput)) // 2552
 }
