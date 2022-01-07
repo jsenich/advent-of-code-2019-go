@@ -56,7 +56,7 @@ func part_two(data string) int {
 }
 
 func main() {
-	puzzleInput, _ := fs.ReadFile("day01_input.txt")
+	puzzleInput, _ := fs.ReadFile("input.txt")
 
 	fmt.Printf("Part One: %d\n", part_one(string(puzzleInput))) // 3349352
 	fmt.Printf("Part Two: %d\n", part_two(string(puzzleInput))) // 5021154
