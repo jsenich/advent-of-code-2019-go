@@ -85,13 +85,48 @@ func PartOne(puzzleInput string) int {
 	return intersectionDistances[0]
 }
 
+func getStepsToIntersection(intersection Point, wirePoints []Point) int {
+	distance := 0
+	for i := 0; i < len(wirePoints); i++ {
+		if i == 0 {
+			distance += getDistance(Point{0, 0}, wirePoints[i])
+		} else {
+			distance += getDistance(wirePoints[i-1], wirePoints[i])
+		}
+
+		if wirePoints[i] == intersection {
+			break
+		}
+	}
+	return distance
+}
+
 func PartTwo(puzzleInput string) int {
-	return 0
+	w1, w2 := parsePuzzleInput(puzzleInput)
+	w1Points := getWirePoints(w1)
+	w2Points := getWirePoints(w2)
+
+	w1PointsSet := pointSliceToMap(w1Points)
+	lastTotal := -1
+	for _, p := range w2Points {
+		if _, ok := w1PointsSet[p]; ok {
+			intersection := p
+			wire1Steps := getStepsToIntersection(intersection, w1Points)
+			wire2Steps := getStepsToIntersection(intersection, w2Points)
+			totalSteps := wire1Steps + wire2Steps
+
+			if lastTotal == -1 || totalSteps < lastTotal {
+				lastTotal = totalSteps
+			}
+		}
+	}
+
+	return lastTotal
 }
 
 func main() {
 	puzzleInput, _ := fs.ReadFile("input.txt")
 
 	fmt.Printf("Part One: %d\n", PartOne(strings.TrimSpace(string(puzzleInput)))) // 806
-	// fmt.Printf("Part Two: %d\n", PartTwo(puzzleInput))
+	fmt.Printf("Part Two: %d\n", PartTwo(strings.TrimSpace(string(puzzleInput)))) // 6607
 }
