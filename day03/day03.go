@@ -16,9 +16,19 @@ type Point struct {
 	X, Y int
 }
 
-func getWirePoints(wire []string) (points map[Point]struct{}) {
-	var x, y int
-	points = make(map[Point]struct{}, len(wire))
+func pointSliceToMap(points []Point) (set map[Point]struct{}) {
+	set = make(map[Point]struct{}, len(points))
+
+	for _, p := range points {
+		set[p] = struct{}{}
+	}
+
+	return set
+}
+
+func getWirePoints(wire []string) (points []Point) {
+	var x, y int // points = make(map[Point]struct{}, len(wire))
+	points = make([]Point, 0, len(wire))
 	for _, move := range wire {
 		direction := string(move[0])
 
@@ -34,7 +44,8 @@ func getWirePoints(wire []string) (points map[Point]struct{}) {
 			case "D":
 				y -= 1
 			}
-			points[Point{x, y}] = struct{}{}
+
+			points = append(points, Point{x, y})
 		}
 	}
 
@@ -57,8 +68,8 @@ func parsePuzzleInput(puzzleInput string) (wire1 []string, wire2 []string) {
 
 func PartOne(puzzleInput string) int {
 	w1, w2 := parsePuzzleInput(puzzleInput)
-	w1Points := getWirePoints(w1)
-	w2Points := getWirePoints(w2)
+	w1Points := pointSliceToMap(getWirePoints(w1))
+	w2Points := pointSliceToMap(getWirePoints(w2))
 
 	intersectionDistances := []int{}
 	for p := range w2Points {
@@ -74,7 +85,7 @@ func PartOne(puzzleInput string) int {
 	return intersectionDistances[0]
 }
 
-func PartTwo(puzzleInput []byte) int {
+func PartTwo(puzzleInput string) int {
 	return 0
 }
 
