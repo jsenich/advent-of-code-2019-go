@@ -1,18 +1,38 @@
 package intcode
 
 import (
+	"log"
 	"strconv"
 	"strings"
 )
 
-var opcodeParameterCounts map[int]int = map[int]int{
-	1: 3,
-	2: 3,
-	3: 1,
-	4: 1,
+type Opcode int
+
+const (
+	_ Opcode = iota
+	Add
+	Multiply
+	Input
+	Output
+	JumpIfTrue
+	JumpIfFalse
+	LessThan
+	Equals
+	Halt = Opcode(99)
+)
+
+var opcodeParameterCounts map[Opcode]int = map[Opcode]int{
+	Add:         3,
+	Multiply:    3,
+	Input:       1,
+	Output:      1,
+	JumpIfTrue:  2,
+	JumpIfFalse: 2,
+	LessThan:    3,
+	Equals:      3,
 }
 
-func intLength(n int) (length int) {
+func opcodeLength(n Opcode) (length int) {
 	for n > 0 {
 		n = n / 10
 		length++
@@ -56,16 +76,18 @@ func (c *Computer) ExecuteProgram(args ...int) {
 		c.idInput = args[0]
 	}
 
+out:
 	for {
-		opcode := c.Memory[c.instructionPointer]
-		if opcode == 99 {
+		opcode := Opcode(c.Memory[c.instructionPointer])
+		if opcode == Halt {
 			break
 		}
 
 		modes := make([]int, 3)
-		if intLength(opcode) > 1 {
-			strOpcode := strconv.Itoa(opcode)
-			opcode, _ = strconv.Atoi(string(strOpcode[len(strOpcode)-1]))
+		if opcodeLength(opcode) > 1 {
+			strOpcode := strconv.Itoa(int(opcode))
+			oc, _ := strconv.Atoi(string(strOpcode[len(strOpcode)-1]))
+			opcode = Opcode(oc)
 			var modePos int = 0
 			for i := len(strOpcode) - 3; i >= 0; i-- {
 				mode, _ := strconv.Atoi(string(strOpcode[i]))
@@ -81,19 +103,48 @@ func (c *Computer) ExecuteProgram(args ...int) {
 		}
 
 		switch opcode {
-		case 1:
+		case Add:
 			c.Memory[parameters[2]] = c.Memory[parameters[0]] + c.Memory[parameters[1]]
-		case 2:
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case Multiply:
 			c.Memory[parameters[2]] = c.Memory[parameters[0]] * c.Memory[parameters[1]]
-		case 3:
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case Input:
 			c.Memory[parameters[0]] = c.idInput
-		case 4:
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case Output:
 			c.diagnosticCode = c.Memory[parameters[0]]
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case JumpIfTrue:
+			if c.Memory[parameters[0]] != 0 {
+				c.instructionPointer = c.Memory[parameters[1]]
+			} else {
+				c.instructionPointer += opcodeParameterCounts[opcode] + 1
+			}
+		case JumpIfFalse:
+			if c.Memory[parameters[0]] == 0 {
+				c.instructionPointer = c.Memory[parameters[1]]
+			} else {
+				c.instructionPointer += opcodeParameterCounts[opcode] + 1
+			}
+		case LessThan:
+			if c.Memory[parameters[0]] < c.Memory[parameters[1]] {
+				c.Memory[parameters[2]] = 1
+			} else {
+				c.Memory[parameters[2]] = 0
+			}
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case Equals:
+			if c.Memory[parameters[0]] == c.Memory[parameters[1]] {
+				c.Memory[parameters[2]] = 1
+			} else {
+				c.Memory[parameters[2]] = 0
+			}
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 		default:
-			panic("unexpected opcode")
+			log.Printf("unexpected opcode: %v", opcode)
+			break out
 		}
-
-		c.instructionPointer += opcodeParameterCounts[opcode] + 1
 	}
 }
 
