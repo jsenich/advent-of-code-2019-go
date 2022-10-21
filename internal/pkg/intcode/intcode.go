@@ -68,11 +68,15 @@ func (c *Computer) evaluateParam(mode int, offset int) int {
 	}
 }
 
-func (c *Computer) ExecuteProgram(args ...int) {
-	if len(args) == 2 {
-		c.Memory[1] = args[0] // noun
-		c.Memory[2] = args[1] // verb
-	} else if len(args) == 1 {
+func (c *Computer) ExecuteProgram(phaseMode bool, args ...int) {
+	if !phaseMode {
+		if len(args) == 2 {
+			c.Memory[1] = args[0] // noun
+			c.Memory[2] = args[1] // verb
+		} else if len(args) == 1 {
+			c.idInput = args[0]
+		}
+	} else {
 		c.idInput = args[0]
 	}
 
@@ -112,6 +116,9 @@ out:
 		case Input:
 			c.Memory[parameters[0]] = c.idInput
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+			if phaseMode && len(args) == 2 {
+				c.idInput = args[1]
+			}
 		case Output:
 			c.diagnosticCode = c.Memory[parameters[0]]
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
