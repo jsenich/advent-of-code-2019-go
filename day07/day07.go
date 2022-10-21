@@ -5,17 +5,33 @@ import (
 	"embed"
 	"fmt"
 	"sort"
-
-	"gonum.org/v1/gonum/stat/combin"
 )
 
 //go:embed *.txt
 var fs embed.FS
 
+func permutation(xs []int) (permuts [][]int) {
+	var rc func([]int, int)
+	rc = func(a []int, k int) {
+		if k == len(a) {
+			permuts = append(permuts, append([]int{}, a...))
+		} else {
+			for i := k; i < len(xs); i++ {
+				a[k], a[i] = a[i], a[k]
+				rc(a, k+1)
+				a[k], a[i] = a[i], a[k]
+			}
+		}
+	}
+	rc(xs, 0)
+
+	return permuts
+}
+
 func PartOne(puzzleInput []byte) int {
 	var sequences []int
 	amplifiers := make([]intcode.Computer, 5)
-	p := combin.Permutations(5, 5)
+	p := permutation([]int{0, 1, 2, 3, 4})
 
 	for _, sequence := range p {
 		var inputSignal int
