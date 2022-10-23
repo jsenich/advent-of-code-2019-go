@@ -11,7 +11,8 @@ var fs embed.FS
 
 func PartOne(puzzleInput []byte) int {
 	computer := intcode.NewComputer(puzzleInput)
-	computer.ExecuteProgram(12, 2)
+	computer.SetInputs(12, 2)
+	computer.ExecuteProgram()
 
 	return computer.Memory[0]
 }
@@ -28,7 +29,8 @@ out:
 			if noun > 0 || verb > 0 {
 				computer.Reset()
 			}
-			computer.ExecuteProgram(noun, verb)
+			computer.SetInputs(noun, verb)
+			computer.ExecuteProgram()
 			if computer.Memory[0] == targetValue {
 				result = 100*noun + verb
 				break out

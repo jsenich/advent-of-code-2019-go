@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+type Option func(*Computer)
+
 type Opcode int
 
 const (
@@ -47,6 +49,18 @@ type Computer struct {
 	Memory             []int
 	idInput            int
 	diagnosticCode     interface{}
+	phaseMode          bool
+}
+
+func WithPhaseMode() Option {
+	return func(c *Computer) {
+		c.phaseMode = true
+	}
+}
+
+func (c *Computer) SetInputs(noun, verb int) {
+	c.Memory[1] = noun
+	c.Memory[2] = verb
 }
 
 func (c *Computer) Reset() {
@@ -68,16 +82,9 @@ func (c *Computer) evaluateParam(mode int, offset int) int {
 	}
 }
 
-func (c *Computer) ExecuteProgram(phaseMode bool, args ...int) {
-	if !phaseMode {
-		if len(args) == 2 {
-			c.Memory[1] = args[0] // noun
-			c.Memory[2] = args[1] // verb
-		} else if len(args) == 1 {
-			c.idInput = args[0]
-		}
-	} else {
-		c.idInput = args[0]
+func (c *Computer) ExecuteProgram(inputs ...int) {
+	if len(inputs) > 0 {
+		c.idInput = inputs[0]
 	}
 
 out:
@@ -116,8 +123,8 @@ out:
 		case Input:
 			c.Memory[parameters[0]] = c.idInput
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
-			if phaseMode && len(args) == 2 {
-				c.idInput = args[1]
+			if c.phaseMode && len(inputs) == 2 {
+				c.idInput = inputs[1]
 			}
 		case Output:
 			c.diagnosticCode = c.Memory[parameters[0]]
@@ -155,7 +162,7 @@ out:
 	}
 }
 
-func NewComputer(program []byte) *Computer {
+func NewComputer(program []byte, opts ...Option) *Computer {
 	programStrs := strings.Split(string(program), ",")
 	programInts := make([]int, len(programStrs))
 
@@ -164,7 +171,11 @@ func NewComputer(program []byte) *Computer {
 	}
 	c := new(Computer)
 	c.program = programInts
-	c.idInput = -1
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
 	c.Reset()
 
 	return c

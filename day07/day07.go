@@ -37,8 +37,8 @@ func PartOne(puzzleInput []byte) int {
 		var inputSignal int
 
 		for i := 0; i < 5; i++ {
-			amplifiers[i] = *intcode.NewComputer(puzzleInput)
-			amplifiers[i].ExecuteProgram(true, sequence[i], inputSignal)
+			amplifiers[i] = *intcode.NewComputer(puzzleInput, intcode.WithPhaseMode())
+			amplifiers[i].ExecuteProgram(sequence[i], inputSignal)
 			inputSignal = amplifiers[i].GetDiagnosticCode().(int)
 			if i == 4 {
 				sequences = append(sequences, inputSignal)

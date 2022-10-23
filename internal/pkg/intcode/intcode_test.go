@@ -16,15 +16,10 @@ func IntSliceToString(vals []int) string {
 	return strings.Join(stringSlice, ",")
 }
 
-func FooBar() {
-
-}
-
 func TestComputer_ExecuteProgram_Day02(t *testing.T) {
 	tests := []struct {
 		name    string
 		program string
-		args    []int
 		want    string
 	}{
 		{
@@ -47,7 +42,7 @@ func TestComputer_ExecuteProgram_Day02(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewComputer([]byte(tt.program))
-			c.ExecuteProgram(tt.args...)
+			c.ExecuteProgram()
 
 			got := IntSliceToString(c.Memory)
 
@@ -62,14 +57,14 @@ func TestComputer_ExecuteProgram_Day05(t *testing.T) {
 	tests := []struct {
 		name                 string
 		program              string
-		args                 []int
+		input                int
 		want                 int
 		checkPosition        int
 		returnDiagnosticCode bool
 	}{
 		{
 			name:    "returns diagnostic code output equal to the input",
-			program: "3,0,4,0,99", args: []int{55}, want: 55, returnDiagnosticCode: true,
+			program: "3,0,4,0,99", input: 55, want: 55, returnDiagnosticCode: true,
 		},
 		{
 			name:    "parameter modes with multiply operation sets value at expected postition (33 * 3 = 99)",
@@ -81,57 +76,57 @@ func TestComputer_ExecuteProgram_Day05(t *testing.T) {
 		},
 		{
 			name:    "equals op postion mode equals expected output",
-			program: "3,9,8,9,10,9,4,9,99,-1,8", args: []int{8}, want: 1, returnDiagnosticCode: true,
+			program: "3,9,8,9,10,9,4,9,99,-1,8", input: 8, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "equals op postion mode not equals expected output",
-			program: "3,9,8,9,10,9,4,9,99,-1,8", args: []int{7}, want: 0, returnDiagnosticCode: true,
+			program: "3,9,8,9,10,9,4,9,99,-1,8", input: 7, want: 0, returnDiagnosticCode: true,
 		},
 		{
 			name:    "less than op postion mode less than expected output",
-			program: "3,9,7,9,10,9,4,9,99,-1,8", args: []int{7}, want: 1, returnDiagnosticCode: true,
+			program: "3,9,7,9,10,9,4,9,99,-1,8", input: 7, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "less than op postion mode greater than expected output",
-			program: "3,9,7,9,10,9,4,9,99,-1,8", args: []int{9}, want: 0, returnDiagnosticCode: true,
+			program: "3,9,7,9,10,9,4,9,99,-1,8", input: 9, want: 0, returnDiagnosticCode: true,
 		},
 		{
 			name:    "equals op postion mode equals expected output",
-			program: "3,3,1108,-1,8,3,4,3,99", args: []int{8}, want: 1, returnDiagnosticCode: true,
+			program: "3,3,1108,-1,8,3,4,3,99", input: 8, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "equals op postion mode not equals expected output",
-			program: "3,3,1108,-1,8,3,4,3,99", args: []int{7}, want: 0, returnDiagnosticCode: true,
+			program: "3,3,1108,-1,8,3,4,3,99", input: 7, want: 0, returnDiagnosticCode: true,
 		},
 		{
 			name:    "less than op immediate mode less than expected output",
-			program: "3,3,1107,-1,8,3,4,3,99", args: []int{7}, want: 1, returnDiagnosticCode: true,
+			program: "3,3,1107,-1,8,3,4,3,99", input: 7, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "less than op immediate mode greater than expected output",
-			program: "3,3,1107,-1,8,3,4,3,99", args: []int{9}, want: 0, returnDiagnosticCode: true,
+			program: "3,3,1107,-1,8,3,4,3,99", input: 9, want: 0, returnDiagnosticCode: true,
 		},
 		{
 			name:    "jump op position mode non-zero input expected output",
-			program: "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", args: []int{5}, want: 1, returnDiagnosticCode: true,
+			program: "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", input: 5, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "jump op position mode zero input expected output",
-			program: "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", args: []int{0}, want: 0, returnDiagnosticCode: true,
+			program: "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", input: 0, want: 0, returnDiagnosticCode: true,
 		},
 		{
 			name:    "jump op immediate mode non-zero input expected output",
-			program: "3,3,1105,-1,9,1101,0,0,12,4,12,99,1", args: []int{5}, want: 1, returnDiagnosticCode: true,
+			program: "3,3,1105,-1,9,1101,0,0,12,4,12,99,1", input: 5, want: 1, returnDiagnosticCode: true,
 		},
 		{
 			name:    "jump op immediate mode zero input expected output",
-			program: "3,3,1105,-1,9,1101,0,0,12,4,12,99,1", args: []int{0}, want: 0, returnDiagnosticCode: true,
+			program: "3,3,1105,-1,9,1101,0,0,12,4,12,99,1", input: 0, want: 0, returnDiagnosticCode: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewComputer([]byte(tt.program))
-			c.ExecuteProgram(tt.args...)
+			c.ExecuteProgram(tt.input)
 			var got int
 			if tt.returnDiagnosticCode {
 				got = c.GetDiagnosticCode().(int)
@@ -173,7 +168,7 @@ func TestComputer_ExecuteProgram_Day05_LargerExample(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewComputer([]byte(program))
-			c.ExecuteProgram([]int{tt.input}...)
+			c.ExecuteProgram(tt.input)
 			got := c.GetDiagnosticCode().(int)
 
 			if got != tt.want {
