@@ -51,8 +51,35 @@ func PartOne(puzzleInput []byte) int {
 	return sequences[len(sequences)-1]
 }
 
+func PartTwo(puzzleInput []byte) int {
+	var sequences []int
+	amplifiers := make([]intcode.Computer, 5)
+	p := permutation([]int{5, 6, 7, 8, 9})
+
+	for _, sequence := range p {
+		var inputSignal int
+
+		for i := 0; i < 5; i++ {
+			amplifiers[i] = *intcode.NewComputer(puzzleInput, intcode.WithPhaseMode(), intcode.WithLoopMode())
+		}
+
+		for !amplifiers[0].IsComplete() {
+			for i := 0; i < 5; i++ {
+				amplifiers[i].ExecuteProgram(sequence[i], inputSignal)
+				inputSignal = amplifiers[i].GetDiagnosticCode().(int)
+			}
+		}
+		sequences = append(sequences, inputSignal)
+	}
+
+	sort.Ints(sequences)
+
+	return sequences[len(sequences)-1]
+}
+
 func main() {
 	puzzleInput, _ := fs.ReadFile("input.txt")
 
 	fmt.Printf("Part One: %d\n", PartOne(puzzleInput)) // 18812
+	fmt.Printf("Part Two: %d\n", PartTwo(puzzleInput)) // 25534964
 }

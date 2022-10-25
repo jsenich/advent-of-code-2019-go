@@ -50,11 +50,20 @@ type Computer struct {
 	idInput            int
 	diagnosticCode     interface{}
 	phaseMode          bool
+	phaseUsed          bool
+	loopMode           bool
+	complete           bool
 }
 
 func WithPhaseMode() Option {
 	return func(c *Computer) {
 		c.phaseMode = true
+	}
+}
+
+func WithLoopMode() Option {
+	return func(c *Computer) {
+		c.loopMode = true
 	}
 }
 
@@ -73,6 +82,10 @@ func (c *Computer) GetDiagnosticCode() interface{} {
 	return c.diagnosticCode
 }
 
+func (c *Computer) IsComplete() bool {
+	return c.complete
+}
+
 func (c *Computer) evaluateParam(mode int, offset int) int {
 	pos := c.instructionPointer + offset
 	if mode == 0 {
@@ -87,10 +100,10 @@ func (c *Computer) ExecuteProgram(inputs ...int) {
 		c.idInput = inputs[0]
 	}
 
-out:
 	for {
 		opcode := Opcode(c.Memory[c.instructionPointer])
 		if opcode == Halt {
+			c.complete = true
 			break
 		}
 
@@ -121,14 +134,23 @@ out:
 			c.Memory[parameters[2]] = c.Memory[parameters[0]] * c.Memory[parameters[1]]
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 		case Input:
-			c.Memory[parameters[0]] = c.idInput
-			c.instructionPointer += opcodeParameterCounts[opcode] + 1
-			if c.phaseMode && len(inputs) == 2 {
-				c.idInput = inputs[1]
+			if c.phaseUsed {
+				c.Memory[parameters[0]] = inputs[1]
+			} else {
+				if len(inputs) > 0 {
+					c.Memory[parameters[0]] = inputs[0]
+					if c.phaseMode {
+						c.phaseUsed = true
+					}
+				}
 			}
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 		case Output:
 			c.diagnosticCode = c.Memory[parameters[0]]
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+			if c.loopMode {
+				return
+			}
 		case JumpIfTrue:
 			if c.Memory[parameters[0]] != 0 {
 				c.instructionPointer = c.Memory[parameters[1]]
@@ -157,7 +179,8 @@ out:
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 		default:
 			log.Printf("unexpected opcode: %v", opcode)
-			break out
+			c.complete = true
+			return
 		}
 	}
 }
