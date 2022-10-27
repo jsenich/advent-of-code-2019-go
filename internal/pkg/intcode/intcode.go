@@ -20,18 +20,20 @@ const (
 	JumpIfFalse
 	LessThan
 	Equals
+	RelativeBase
 	Halt = Opcode(99)
 )
 
 var opcodeParameterCounts map[Opcode]int = map[Opcode]int{
-	Add:         3,
-	Multiply:    3,
-	Input:       1,
-	Output:      1,
-	JumpIfTrue:  2,
-	JumpIfFalse: 2,
-	LessThan:    3,
-	Equals:      3,
+	Add:          3,
+	Multiply:     3,
+	Input:        1,
+	Output:       1,
+	JumpIfTrue:   2,
+	JumpIfFalse:  2,
+	LessThan:     3,
+	Equals:       3,
+	RelativeBase: 1,
 }
 
 func opcodeLength(n Opcode) (length int) {
@@ -47,12 +49,13 @@ type Computer struct {
 	program            []int
 	instructionPointer int
 	Memory             []int
-	idInput            int
 	diagnosticCode     interface{}
 	phaseMode          bool
 	phaseUsed          bool
 	loopMode           bool
 	complete           bool
+	relativeBase       int
+	diagnosticOutputs  []int
 }
 
 func WithPhaseMode() Option {
@@ -82,24 +85,34 @@ func (c *Computer) GetDiagnosticCode() interface{} {
 	return c.diagnosticCode
 }
 
+func (c *Computer) GetDiagnosticOutputs() []int {
+	return c.diagnosticOutputs
+}
+
 func (c *Computer) IsComplete() bool {
 	return c.complete
 }
 
 func (c *Computer) evaluateParam(mode int, offset int) int {
-	pos := c.instructionPointer + offset
-	if mode == 0 {
-		return c.Memory[pos]
-	} else {
-		return pos
+	var returnVal = -1
+
+	switch mode {
+	case 0:
+		returnVal = c.Memory[c.instructionPointer+offset]
+	case 1:
+		returnVal = c.instructionPointer + offset
+	case 2:
+		returnVal = c.relativeBase + c.Memory[c.instructionPointer+offset]
 	}
+
+	for len(c.Memory)-1 < returnVal {
+		c.Memory = append(c.Memory, 0)
+	}
+
+	return returnVal
 }
 
 func (c *Computer) ExecuteProgram(inputs ...int) {
-	if len(inputs) > 0 {
-		c.idInput = inputs[0]
-	}
-
 	for {
 		opcode := Opcode(c.Memory[c.instructionPointer])
 		if opcode == Halt {
@@ -147,6 +160,7 @@ func (c *Computer) ExecuteProgram(inputs ...int) {
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 		case Output:
 			c.diagnosticCode = c.Memory[parameters[0]]
+			c.diagnosticOutputs = append(c.diagnosticOutputs, c.Memory[parameters[0]])
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
 			if c.loopMode {
 				return
@@ -177,6 +191,10 @@ func (c *Computer) ExecuteProgram(inputs ...int) {
 				c.Memory[parameters[2]] = 0
 			}
 			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+		case RelativeBase:
+			c.relativeBase += c.Memory[parameters[0]]
+			c.instructionPointer += opcodeParameterCounts[opcode] + 1
+
 		default:
 			log.Printf("unexpected opcode: %v", opcode)
 			c.complete = true

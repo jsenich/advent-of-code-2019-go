@@ -177,3 +177,51 @@ func TestComputer_ExecuteProgram_Day05_LargerExample(t *testing.T) {
 		})
 	}
 }
+
+func TestComputer_ExecuteProgram_Day09_InputOutputsCopyOfItself(t *testing.T) {
+	program := "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
+
+	c := NewComputer([]byte(program))
+	c.ExecuteProgram()
+
+	outputs := c.GetDiagnosticOutputs()
+	strSlice := make([]string, len(outputs))
+	for i, o := range outputs {
+		strSlice[i] = strconv.Itoa(o)
+	}
+
+	got := strings.Join(strSlice, ",")
+
+	if got != program {
+		t.Errorf("output does not match input. \ngot:\n%s\nwant:\n%s", got, program)
+	}
+
+}
+
+func TestComputer_ExecuteProgram_Day09_InputProduces16DigitNumber(t *testing.T) {
+	program := "1102,34915192,34915192,7,4,7,99,0"
+
+	c := NewComputer([]byte(program))
+	c.ExecuteProgram()
+
+	out := c.GetDiagnosticCode().(int)
+	got := len(strconv.Itoa(out))
+
+	if got != 16 {
+		t.Errorf("output: %d is not 16 digits", out)
+	}
+}
+
+func TestComputer_ExecuteProgram_Day09_OutputsLargeNumberFromInput(t *testing.T) {
+	program := "104,1125899906842624,99"
+	want := 1125899906842624
+
+	c := NewComputer([]byte(program))
+	c.ExecuteProgram()
+
+	got := c.GetDiagnosticCode().(int)
+
+	if got != want {
+		t.Errorf("unexpected output. got: %d, want: %d", got, want)
+	}
+}
