@@ -4,6 +4,7 @@ import (
 	"adventgo/internal/pkg/intcode"
 	"embed"
 	"fmt"
+	"strings"
 
 	"golang.org/x/exp/slices"
 )
@@ -45,10 +46,12 @@ type PaintRobot struct {
 func NewRobot(program []byte, startingColor Color) *PaintRobot {
 	r := &PaintRobot{
 		Input:            startingColor,
-		PointColors:      map[Point]Color{{0, 0}: startingColor},
+		PointColors:      map[Point]Color{{50, 50}: startingColor},
 		computer:         intcode.NewComputer(program, intcode.WithLoopMode()),
 		currentDirection: "U",
 		paintedPoints:    make(map[Point]int),
+		x:                50,
+		y:                50,
 	}
 
 	return r
@@ -69,6 +72,34 @@ func (r *PaintRobot) PaintHull() {
 			r.paintedPoints[p]++
 		}
 		counter++
+	}
+}
+
+func (r *PaintRobot) RenderHull() {
+	numRows := 100
+	numCols := 100
+
+	hull := make([][]string, numRows)
+	for i := 0; i < numRows; i++ {
+		row := make([]string, numCols)
+		for j := 0; j < numCols; j++ {
+			row[j] = " "
+		}
+
+		hull[i] = row
+	}
+
+	for p, c := range r.PointColors {
+		t := " "
+		if c == White {
+			t = "|"
+		}
+
+		hull[p.y][p.x] = t
+	}
+
+	for _, row := range hull {
+		fmt.Println(strings.Join(row, ""))
 	}
 }
 
@@ -112,25 +143,6 @@ func (r *PaintRobot) turn(d TurnDirection) {
 	r.Input = r.PointColors[Point{r.x, r.y}]
 }
 
-func GetNewDirection(currentDirection string, deg int) string {
-	directions := []string{"U", "R", "D", "L"}
-	i := slices.Index(directions, currentDirection)
-
-	if deg == 0 {
-		i -= 1
-	} else {
-		i += 1
-	}
-
-	if i < 0 {
-		i = len(directions) + i
-	} else if i >= len(directions) {
-		i = i - len(directions)
-	}
-
-	return directions[i]
-}
-
 func PartOne(puzzleInput []byte) int {
 	r := NewRobot(puzzleInput, Black)
 	r.PaintHull()
@@ -138,8 +150,16 @@ func PartOne(puzzleInput []byte) int {
 	return len(r.paintedPoints)
 }
 
+func PartTwo(puzzleInput []byte) {
+	r := NewRobot(puzzleInput, White)
+	r.PaintHull()
+	r.RenderHull()
+}
+
 func main() {
 	puzzleInput, _ := fs.ReadFile("input.txt")
 
 	fmt.Printf("Part One: %d\n", PartOne(puzzleInput)) // 2041
+	fmt.Printf("Part Two:\n")
+	PartTwo(puzzleInput) // ZRZPKEZR
 }
